@@ -1,26 +1,63 @@
 import { useState } from "react";
+import axios from "axios";
+import "./App.css"; // make sure this line is here
+
+type Message = {
+  sender: "user" | "bot";
+  text: string;
+  typing?: boolean; // new flag for spinner
+};
 
 function App() {
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<Message[]>([
     { sender: "bot", text: "Hello! How can I help you today?" }
   ]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const sendMessage = () => {
+  const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!input.trim()) return;
 
-    // Add user message
-    setMessages([...messages, { sender: "user", text: input }]);
-
-    // Clear input
+    const userMessage = input;
+    setMessages((prev) => [...prev, { sender: "user", text: userMessage }]);
     setInput("");
 
-    // TODO: Call FastAPI backend here instead of mock response
-    setMessages((prev) => [
-      ...prev,
-      { sender: "user", text: input },
-      { sender: "bot", text: "🤖 (This will be replaced with AI response)" }
-    ]);
+    // add typing placeholder
+    setLoading(true);
+    setMessages((prev) => [...prev, { sender: "bot", text: "", typing: true }]);
+
+    try {
+      const res = await axios.post<{ reply: string }>(
+        "http://127.0.0.1:8000/chat",
+        {
+          text: userMessage,
+          user_id: "vj"
+        },
+        { timeout: 15000 }
+      );
+
+      const botReply = res.data.reply;
+
+      // replace typing spinner with reply
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { sender: "bot", text: botReply };
+        return updated;
+      });
+    } catch (err) {
+      console.error(err);
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          sender: "bot",
+          text: "⚠️ Error connecting to server."
+        };
+        return updated;
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -38,22 +75,34 @@ function App() {
       >
         {messages.map((msg, idx) => (
           <div key={idx} style={{ textAlign: msg.sender === "user" ? "right" : "left" }}>
-            <p>
-              <strong>{msg.sender}:</strong> {msg.text}
-            </p>
+            {msg.typing ? (
+              <div className="typing">
+                <div className="dot"></div>
+                <div className="dot"></div>
+                <div className="dot"></div>
+              </div>
+            ) : (
+              <p>
+                <strong>{msg.sender}:</strong> {msg.text}
+              </p>
+            )}
           </div>
         ))}
       </div>
-      <div style={{ display: "flex", gap: "0.5rem" }}>
+
+      <form onSubmit={sendMessage} style={{ display: "flex", gap: "0.5rem" }}>
         <input
           type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setInput(e.target.value)
+          }
           placeholder="Type a message..."
           style={{ flex: 1, padding: "0.5rem" }}
+          disabled={loading}
         />
-        <button onClick={sendMessage}>Send</button>
-      </div>
+        <button type="submit" disabled={loading}>Send</button>
+      </form>
     </div>
   );
 }
