@@ -10,7 +10,7 @@ type Message = {
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([
-    { sender: "bot", text: "Hello! How can I help you today?" }
+    { sender: "bot", text: "I can answer based on Autobiography of a Yogi. Ask your question." }
   ]);
   const [input, setInput] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -68,7 +68,8 @@ function App() {
           border: "1px solid #ccc",
           borderRadius: "8px",
           padding: "1rem",
-          height: "400px",
+          height: "600px",
+          width: "400px",
           overflowY: "auto",
           marginBottom: "1rem"
         }}
