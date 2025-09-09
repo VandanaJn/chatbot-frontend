@@ -1,112 +1,87 @@
-import { useState } from "react";
-import axios from "axios";
-import "./App.css"; // make sure this line is here
+import React, { useState } from "react";
+import "./App.css";
 
-type Message = {
+interface Message {
   sender: "user" | "bot";
   text: string;
-  typing?: boolean; // new flag for spinner
-};
+}
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([
-    { sender: "bot", text: "Namaste. I am AtmaBandhu—your spiritual friend and companion on the path within. Whether you seek guidance, reflection, or simply presence, I am here to support your journey." }
+    {
+      sender: "bot",
+      text:
+        "Namaste. I am AtmaBandhu—your spiritual friend and companion on the path within. Whether you seek guidance, reflection, or simply presence, I am here to support your journey.",
+    },
   ]);
-  const [input, setInput] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+  const [input, setInput] = useState("");
+  const [typing, setTyping] = useState(false);
 
-  const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSend = async () => {
     if (!input.trim()) return;
 
-    const userMessage = input;
-    setMessages((prev) => [...prev, { sender: "user", text: userMessage }]);
+    const userMessage: Message = { sender: "user", text: input };
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
-
-    // add typing placeholder
-    setLoading(true);
-    setMessages((prev) => [...prev, { sender: "bot", text: "", typing: true }]);
+    setTyping(true);
 
     try {
-      const res = await axios.post<{ reply: string }>(
-        "http://127.0.0.1:8000/chat",
+      const response = await fetch("http://127.0.0.1:8000/chat/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: "vj",
+          text: input
+        }),
+      });
+
+      const data = await response.json();
+      const botMessage: Message = { sender: "bot", text: data.reply };
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
         {
-          text: userMessage,
-          user_id: "vj"
-        },
-        { timeout: 15000 }
-      );
-
-      const botReply = res.data.reply;
-
-      // replace typing spinner with reply
-      setMessages((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = { sender: "bot", text: botReply };
-        return updated;
-      });
-    } catch (err) {
-      console.error(err);
-      setMessages((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = {
           sender: "bot",
-          text: "⚠️ Error connecting to server."
-        };
-        return updated;
-      });
+          text: "🌿 There was a moment of stillness in our connection. Let us pause, breathe, and try again shortly. I remain here with you.",
+        },
+      ]);
     } finally {
-      setLoading(false);
+      setTyping(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: "600px", margin: "2rem auto", fontFamily: "sans-serif" }}>
-      <h2>AtmaBandhu</h2>
-      <div
-        style={{
-          border: "1px solid #ccc",
-          borderRadius: "8px",
-          padding: "1rem",
-          height: "600px",
-          width: "400px",
-          overflowY: "auto",
-          marginBottom: "1rem"
-        }}
-      >
+    <div className="app-container">
+      <h1 className="title">🧘‍♂️ AtmaBandhu</h1>
+      <div className="chat-box">
         {messages.map((msg, idx) => (
-          <div key={idx} style={{ textAlign: msg.sender === "user" ? "right" : "left" }}>
-            {msg.typing ? (
-              <div className="typing">
-                <div className="dot"></div>
-                <div className="dot"></div>
-                <div className="dot"></div>
-              </div>
-            ) : (
-              <p>
-                <strong>{msg.sender}:</strong> {msg.text}
-              </p>
-            )}
+          <div key={idx} className={`message-container ${msg.sender}`}>
+            {msg.sender === "bot" && <div className="avatar bot-avatar" />}
+            <div className={`message-bubble ${msg.sender === "bot" ? "bot-bubble" : "user-bubble"}`}>
+              {msg.text}
+            </div>
+            {msg.sender === "user" && <div className="avatar user-avatar" />}
           </div>
         ))}
-      </div>
 
-      <form onSubmit={sendMessage} style={{ display: "flex", gap: "0.5rem" }}>
+        {typing && <div className="typing-indicator">AtmaBandhu is thinking...</div>}
+      </div>
+      <form className="input-area" onSubmit={(e) => {
+        e.preventDefault();
+        handleSend();
+      }}>
         <input
           type="text"
           value={input}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setInput(e.target.value)
-          }
-          placeholder="Type a message..."
-          style={{ flex: 1, padding: "0.5rem" }}
-          disabled={loading}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask your question..."
         />
-        <button type="submit" disabled={loading}>Send</button>
+        <button type="submit">Send</button>
       </form>
+
     </div>
   );
 }
-
 
 export default App;
