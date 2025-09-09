@@ -10,7 +10,7 @@ type Message = {
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([
-    { sender: "bot", text: "I can answer based on Autobiography of a Yogi. Ask your question." }
+    { sender: "bot", text: "Namaste. I am AtmaBandhu—your spiritual friend and companion on the path within. Whether you seek guidance, reflection, or simply presence, I am here to support your journey." }
   ]);
   const [input, setInput] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -62,7 +62,7 @@ function App() {
 
   return (
     <div style={{ maxWidth: "600px", margin: "2rem auto", fontFamily: "sans-serif" }}>
-      <h2>Chatbot</h2>
+      <h2>AtmaBandhu</h2>
       <div
         style={{
           border: "1px solid #ccc",
@@ -107,5 +107,6 @@ function App() {
     </div>
   );
 }
+
 
 export default App;
