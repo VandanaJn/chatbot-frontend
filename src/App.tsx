@@ -11,7 +11,7 @@ function App() {
     {
       sender: "bot",
       text:
-        "Namaste. I am AtmaBandhu—your spiritual friend and companion on the path within. Whether you seek guidance, reflection, or simply presence, I am here to support your journey.",
+        "I am SageAI—your spiritual companion. Drawing from the wisdom of Paramhansa Yogananda and the Path of Reiki Raja Yoga, I offer reflections for your inner journey. What would you like to explore today?"
     },
   ]);
   const [input, setInput] = useState("");
@@ -26,7 +26,7 @@ function App() {
     setTyping(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/chat/", {
+      const response = await fetch("http://127.0.0.1:8000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -53,7 +53,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <h1 className="title">🧘‍♂️ AtmaBandhu</h1>
+      <div className="title"></div>
       <div className="chat-box">
         {messages.map((msg, idx) => (
           <div key={idx} className={`message-container ${msg.sender}`}>
@@ -65,7 +65,7 @@ function App() {
           </div>
         ))}
 
-        {typing && <div className="typing-indicator">AtmaBandhu is thinking...</div>}
+        {typing && <div className="typing-indicator">SageAI is thinking...</div>}
       </div>
       <form className="input-area" onSubmit={(e) => {
         e.preventDefault();
